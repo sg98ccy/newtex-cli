@@ -8,6 +8,7 @@ CONFIG_DIR = Path.home() / ".config" / "newtex"
 CONFIG_FILE = CONFIG_DIR / "templates.yml"
 ACM_TEMPLATE_ENV = "NEWTEX_TEMPLATE_ACM_PATH"
 DEFAULT_TEMPLATE_ENV = "NEWTEX_DEFAULT_TEMPLATE"
+ACM_PACKAGED_TEMPLATE = "package://acm"
 
 
 def _load_environment() -> None:
@@ -20,7 +21,7 @@ def _default_config() -> dict:
         "default_template": os.getenv(DEFAULT_TEMPLATE_ENV, "acm"),
         "templates": {
             "acm": {
-                "path": os.getenv(ACM_TEMPLATE_ENV, ""),
+                "path": os.getenv(ACM_TEMPLATE_ENV, ACM_PACKAGED_TEMPLATE),
                 "description": "ACM Conference Proceedings Primary Article",
             }
         },
@@ -38,10 +39,13 @@ def _apply_env_overrides(config: dict) -> dict:
     acm_template = templates.setdefault(
         "acm",
         {
-            "path": "",
+            "path": ACM_PACKAGED_TEMPLATE,
             "description": "ACM Conference Proceedings Primary Article",
         },
     )
+
+    if not acm_template.get("path"):
+        acm_template["path"] = ACM_PACKAGED_TEMPLATE
 
     if acm_path:
         acm_template["path"] = acm_path

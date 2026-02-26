@@ -5,10 +5,15 @@
 ## 1. Installation
 
 ```bash
-pipx install newtex-scaffold
+pipx install newtex-cli
 ```
 
+Works on macOS, Linux, and Windows (with Python/pipx).
+
 ## 2. Configuration
+
+By default, `acm` is bundled inside the package and resolves to `package://acm`.
+You can run `newtex <project-name> acm` immediately after `pipx install`.
 
 ### 2.1 Local environment file
 
@@ -80,8 +85,14 @@ newtex --templates-list
 
 - Project names must be lowercase kebab-case (example: `exlang-paper`).
 - If a template path is invalid, the CLI exits with an error message.
+- Template sources support three modes:
+	- local directory path (copied as-is)
+	- `package://<name>` (copied from bundled package resources)
+	- remote template URL (scaffolded via Copier)
 
-## 5. Build & Publish
+## 5. Maintainer Release (optional)
+
+End users can skip this section.
 
 ### 5.1 Build distributions
 
@@ -106,10 +117,10 @@ export TWINE_PASSWORD=<your-pypi-api-token>
 python -m twine upload dist/*
 ```
 
-### 5.3 Install on another Mac
+### 5.3 Install on another machine (cross-platform)
 
 ```bash
-pipx install newtex-scaffold
+pipx install newtex-cli
 ```
 
 Then configure templates on that machine:

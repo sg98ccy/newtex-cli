@@ -278,10 +278,6 @@ def main(
     _info(f"Template: [bold]{template_alias}[/bold]")
     _info(f"Target project: [bold]{name}[/bold]")
 
-    if not Path(template_path).exists():
-        _error(f"Template path not found: {template_path}")
-        raise typer.Exit(code=1)
-
     try:
         with console.status("[bold cyan]Scaffolding project...[/bold cyan]"):
             scaffold_project(

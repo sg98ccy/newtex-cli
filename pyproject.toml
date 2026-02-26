@@ -28,8 +28,8 @@ dependencies = [
 newtex = "newtex.cli:app"
 
 [project.urls]
-Homepage = "https://example.internal/newtex"
-Repository = "https://example.internal/newtex/repo"
+Homepage = "https://github.com/sg98ccy/newtex-cli"
+Repository = "https://github.com/sg98ccy/newtex-cli"
 
 [tool.hatch.version]
 source = "vcs"
@@ -51,6 +51,7 @@ include = [
 [tool.hatch.build]
 include = [
   "src/newtex/resources/gitignore/*.gitignore",
+  "src/newtex/resources/templates/**/*",
 ]
 
 [project.optional-dependencies]

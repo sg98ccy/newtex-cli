@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "newtex-cli"
+dynamic = ["version"]
+description = "Local LaTeX project scaffolder"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary"}
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Environment :: Console",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "typer>=0.12",
+  "questionary>=2.0",
+  "pyyaml>=6.0",
+  "python-dotenv>=1.0",
+  "rich>=13.7",
+]
+
+[project.scripts]
+newtex = "newtex.cli:app"
+
+[project.urls]
+Homepage = "https://example.internal/newtex"
+Repository = "https://example.internal/newtex/repo"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "python-simplified-semver"
+local_scheme = "no-local-version"
+fallback_version = "0.1.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/newtex"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/newtex",
+  "/pyproject.toml",
+]
+
+[tool.hatch.build]
+include = [
+  "src/newtex/resources/gitignore/*.gitignore",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+publish = [
+  "build>=1.2",
+  "twine>=5.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

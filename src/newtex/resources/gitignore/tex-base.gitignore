@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# LaTeX intermediate files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+
+# Bibliography / indexing extras
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.idx
+*.ilg
+*.ind
+*.ist
+
+# Latexmk / temp
+_latexmk*
+latexmk*.log
+
+# Minted / pygments
+_minted*
+*.pyg
+
+# Build dirs (common)
+build/
+out/
+
+# Editor extras
+.idea/
+__pycache__/
+.venv/

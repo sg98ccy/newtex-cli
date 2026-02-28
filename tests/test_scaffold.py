@@ -41,7 +41,7 @@ def test_scaffold_project_copies_packaged_template(monkeypatch, tmp_path: Path) 
 
     def _fake_copy_packaged_template(template_key: str, project_dir: Path) -> None:
         calls["copied"] = True
-        assert template_key == "acm"
+        assert template_key == "acm-conf"
         project_dir.mkdir(parents=True, exist_ok=False)
         (project_dir / "README.md").write_text("packaged", encoding="utf-8")
 
@@ -50,7 +50,7 @@ def test_scaffold_project_copies_packaged_template(monkeypatch, tmp_path: Path) 
     monkeypatch.setattr(scaffold_module, "run_cmd", lambda *args, **kwargs: None)
 
     scaffold_module.scaffold_project(
-        template_path="package://acm",
+        template_path="package://acm-conf",
         project_name="paper",
         init_git=False,
         open_code=False,

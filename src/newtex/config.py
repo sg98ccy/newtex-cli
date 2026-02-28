@@ -1,60 +1,111 @@
-import os
 from pathlib import Path
+from importlib import resources
 
 import yaml
-from dotenv import load_dotenv
 
 CONFIG_DIR = Path.home() / ".config" / "newtex"
 CONFIG_FILE = CONFIG_DIR / "templates.yml"
-ACM_TEMPLATE_ENV = "NEWTEX_TEMPLATE_ACM_PATH"
-DEFAULT_TEMPLATE_ENV = "NEWTEX_DEFAULT_TEMPLATE"
-ACM_PACKAGED_TEMPLATE = "package://acm"
+DEFAULT_TEMPLATE_ALIAS = "acm-conf"
+TEMPLATE_METADATA_FILENAME = "newtex-template.yml"
 
 
-def _load_environment() -> None:
-    load_dotenv(override=False)
-    load_dotenv(Path.cwd() / ".env.local", override=True)
+def _format_template_description(alias: str) -> str:
+    return alias.replace("-", " ").title()
 
 
-def _default_config() -> dict:
+def _packaged_template_path(alias: str) -> str:
+    return f"package://{alias}"
+
+
+def _load_template_metadata(template_dir) -> dict:
+    metadata_file = template_dir / TEMPLATE_METADATA_FILENAME
+    if not metadata_file.is_file():
+        return {}
+
+    try:
+        loaded = yaml.safe_load(metadata_file.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+    if not isinstance(loaded, dict):
+        return {}
+
+    return loaded
+
+
+def discover_bundled_templates() -> dict:
+    templates_root = resources.files("newtex.resources.templates")
+    templates: dict[str, dict[str, str]] = {}
+
+    for template_dir in sorted(templates_root.iterdir(), key=lambda entry: entry.name):
+        if not template_dir.is_dir():
+            continue
+
+        alias = template_dir.name
+        if alias.startswith(".") or alias.startswith("__"):
+            continue
+
+        metadata = _load_template_metadata(template_dir)
+        description = str(metadata.get("description", "")).strip() or _format_template_description(alias)
+
+        templates[alias] = {
+            "path": _packaged_template_path(alias),
+            "description": description,
+        }
+
+    return templates
+
+
+def _normalize_template(alias: str, template: object, bundled_templates: dict) -> dict:
+    bundled = bundled_templates.get(alias, {})
+    normalized = template if isinstance(template, dict) else {}
+
+    path = str(normalized.get("path", "")).strip()
+    if not path:
+        path = bundled.get("path", "")
+
+    description = str(normalized.get("description", "")).strip()
+    if not description:
+        description = bundled.get("description", _format_template_description(alias))
+
     return {
-        "default_template": os.getenv(DEFAULT_TEMPLATE_ENV, "acm"),
-        "templates": {
-            "acm": {
-                "path": os.getenv(ACM_TEMPLATE_ENV, ACM_PACKAGED_TEMPLATE),
-                "description": "ACM Conference Proceedings Primary Article",
-            }
-        },
+        "path": path,
+        "description": description,
     }
 
 
-def _apply_env_overrides(config: dict) -> dict:
-    default_template = os.getenv(DEFAULT_TEMPLATE_ENV)
-    acm_path = os.getenv(ACM_TEMPLATE_ENV)
+def _merge_with_bundled_templates(config: dict) -> dict:
+    bundled_templates = discover_bundled_templates()
 
-    if default_template:
-        config["default_template"] = default_template
+    templates: dict[str, dict] = {
+        alias: _normalize_template(alias, template, bundled_templates)
+        for alias, template in bundled_templates.items()
+    }
 
-    templates = config.setdefault("templates", {})
-    acm_template = templates.setdefault(
-        "acm",
-        {
-            "path": ACM_PACKAGED_TEMPLATE,
-            "description": "ACM Conference Proceedings Primary Article",
-        },
-    )
+    configured_templates = config.get("templates", {})
+    if isinstance(configured_templates, dict):
+        for alias, template in configured_templates.items():
+            templates[alias] = _normalize_template(alias, template, bundled_templates)
 
-    if not acm_template.get("path"):
-        acm_template["path"] = ACM_PACKAGED_TEMPLATE
+    configured_default = config.get("default_template")
+    if configured_default in templates:
+        default_template = configured_default
+    elif DEFAULT_TEMPLATE_ALIAS in templates:
+        default_template = DEFAULT_TEMPLATE_ALIAS
+    else:
+        default_template = next(iter(templates), "")
 
-    if acm_path:
-        acm_template["path"] = acm_path
+    return {
+        "default_template": default_template,
+        "templates": templates,
+    }
 
-    return config
+
+def _default_config() -> dict:
+    return _merge_with_bundled_templates({})
 
 
 def ensure_config() -> None:
-    _load_environment()
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     if not CONFIG_FILE.exists():
         with open(CONFIG_FILE, "w", encoding="utf-8") as file:
@@ -102,7 +153,5 @@ def set_default_template(alias: str) -> dict:
 
 
 def load_config() -> dict:
-    _load_environment()
     config = load_persisted_config()
-
-    return _apply_env_overrides(config)
+    return _merge_with_bundled_templates(config)

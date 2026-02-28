@@ -15,8 +15,8 @@ def test_cli_noninteractive_success(monkeypatch, tmp_path: Path) -> None:
         cli_module,
         "load_config",
         lambda: {
-            "default_template": "acm",
-            "templates": {"acm": {"path": "/template", "description": "desc"}},
+            "default_template": "acm-conf",
+            "templates": {"acm-conf": {"path": "/template", "description": "desc"}},
         },
     )
     monkeypatch.setattr(cli_module.Path, "exists", lambda self: True)
@@ -28,7 +28,7 @@ def test_cli_noninteractive_success(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(cli_module, "scaffold_project", _fake_scaffold)
 
-    result = runner.invoke(cli_module.app, ["test-paper", "acm", "--no-git"])
+    result = runner.invoke(cli_module.app, ["test-paper", "acm-conf", "--no-git"])
 
     assert result.exit_code == 0
     assert captured["project_name"] == "test-paper"
@@ -40,12 +40,12 @@ def test_cli_rejects_invalid_project_name(monkeypatch) -> None:
         cli_module,
         "load_config",
         lambda: {
-            "default_template": "acm",
-            "templates": {"acm": {"path": "/template", "description": "desc"}},
+            "default_template": "acm-conf",
+            "templates": {"acm-conf": {"path": "/template", "description": "desc"}},
         },
     )
 
-    result = runner.invoke(cli_module.app, ["Bad_Name", "acm"])
+    result = runner.invoke(cli_module.app, ["Bad_Name", "acm-conf"])
 
     assert result.exit_code != 0
     assert "kebab-case" in result.output
@@ -57,8 +57,8 @@ def test_cli_interactive_uses_suggestion(monkeypatch, tmp_path: Path) -> None:
         cli_module,
         "load_config",
         lambda: {
-            "default_template": "acm",
-            "templates": {"acm": {"path": "/template", "description": "desc"}},
+            "default_template": "acm-conf",
+            "templates": {"acm-conf": {"path": "/template", "description": "desc"}},
         },
     )
     monkeypatch.setattr(cli_module.Path, "exists", lambda self: True)
@@ -72,7 +72,7 @@ def test_cli_interactive_uses_suggestion(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(cli_module.questionary, "text", lambda *args, **kwargs: _Prompt("My Project"))
     monkeypatch.setattr(cli_module.questionary, "confirm", lambda *args, **kwargs: _Prompt(True))
-    monkeypatch.setattr(cli_module.questionary, "select", lambda *args, **kwargs: _Prompt("acm"))
+    monkeypatch.setattr(cli_module.questionary, "select", lambda *args, **kwargs: _Prompt("acm-conf"))
 
     captured = {}
 
@@ -119,25 +119,49 @@ def test_cli_template_set_updates_config(monkeypatch) -> None:
 
     result = runner.invoke(
         cli_module.app,
-        ["--template-set", "acm=/tmp/template", "--template-description", "ACM Template"],
+        ["--template-set", "acm-conf=/tmp/template", "--template-description", "ACM Template"],
     )
 
     assert result.exit_code == 0
-    assert captured["alias"] == "acm"
+    assert captured["alias"] == "acm-conf"
     assert captured["path"] == "/tmp/template"
     assert captured["description"] == "ACM Template"
 
 
-def test_cli_set_default_template_handles_unknown(monkeypatch) -> None:
+def test_cli_default_template_set_handles_unknown(monkeypatch) -> None:
     def _raise(alias: str):
         raise KeyError(f"Unknown template alias: {alias}")
 
     monkeypatch.setattr(cli_module, "set_default_template", _raise)
 
-    result = runner.invoke(cli_module.app, ["--set-default-template", "missing"])
+    result = runner.invoke(cli_module.app, ["--default-template-set", "missing"])
 
     assert result.exit_code == 1
     assert "Unknown template alias" in result.output
+
+
+def test_cli_set_default_template_alias_works(monkeypatch) -> None:
+    captured = {}
+
+    def _set_default(alias: str):
+        captured["alias"] = alias
+
+    monkeypatch.setattr(cli_module, "set_default_template", _set_default)
+
+    result = runner.invoke(cli_module.app, ["--set-default-template", "acm-conf"])
+
+    assert result.exit_code == 0
+    assert captured["alias"] == "acm-conf"
+
+
+def test_cli_default_template_flags_conflict() -> None:
+    result = runner.invoke(
+        cli_module.app,
+        ["--default-template-set", "acm-conf", "--set-default-template", "ntu-report-template"],
+    )
+
+    assert result.exit_code != 0
+    assert "Use only one of" in result.output
 
 
 def test_cli_templates_list_outputs_aliases(monkeypatch) -> None:
@@ -145,9 +169,9 @@ def test_cli_templates_list_outputs_aliases(monkeypatch) -> None:
         cli_module,
         "load_config",
         lambda: {
-            "default_template": "acm",
+            "default_template": "acm-conf",
             "templates": {
-                "acm": {"path": "/tmp/acm", "description": "ACM"},
+                "acm-conf": {"path": "/tmp/acm-conf", "description": "ACM"},
                 "ieee": {"path": "https://example.com/template.git", "description": "IEEE"},
             },
         },
@@ -156,7 +180,7 @@ def test_cli_templates_list_outputs_aliases(monkeypatch) -> None:
     result = runner.invoke(cli_module.app, ["--templates-list"])
 
     assert result.exit_code == 0
-    assert "acm (default) -> /tmp/acm" in result.output
+    assert "acm-conf (default) -> /tmp/acm-conf" in result.output
     assert "ieee -> https://example.com/template.git" in result.output
 
 

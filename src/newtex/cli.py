@@ -143,6 +143,8 @@ def _parse_template_set(value: str) -> tuple[str, str]:
 
 def _pick_template(cfg: dict, template_arg: str | None) -> str:
     templates = cfg["templates"]
+    if not templates:
+        raise typer.BadParameter("No templates are configured")
 
     if template_arg:
         if template_arg not in templates:
@@ -154,10 +156,14 @@ def _pick_template(cfg: dict, template_arg: str | None) -> str:
         for alias, meta in templates.items()
     ]
 
+    default_alias = cfg.get("default_template")
+    if default_alias not in templates:
+        default_alias = next(iter(templates), None)
+
     selected = questionary.select(
         "Which template should I use?",
         choices=choices,
-        default=cfg.get("default_template", "acm"),
+        default=default_alias,
         style=PROMPT_STYLE,
     ).ask()
 
@@ -191,12 +197,13 @@ def _get_project_name(name_arg: str | None) -> str:
 @app.command()
 def main(
     project_name: str | None = typer.Argument(None, help="Project folder name (kebab-case)"),
-    template: str | None = typer.Argument(None, help="Template alias, e.g. acm"),
+    template: str | None = typer.Argument(None, help="Template alias, e.g. acm-conf"),
     tests: bool = typer.Option(False, "--tests", help="Run full test suite and exit"),
     publish_check: bool = typer.Option(False, "--publish-check", help="Validate publishing prerequisites and exit"),
     templates_list: bool = typer.Option(False, "--templates-list", help="List configured templates and exit"),
     template_set: str | None = typer.Option(None, "--template-set", help="Set template alias/path using alias=path-or-url"),
-    set_default: str | None = typer.Option(None, "--set-default-template", help="Set default template alias and exit"),
+    default_template_set: str | None = typer.Option(None, "--default-template-set", help="Set default template alias and exit"),
+    set_default: str | None = typer.Option(None, "--set-default-template", help="Deprecated alias for --default-template-set"),
     template_desc: str | None = typer.Option(None, "--template-description", help="Description used with --template-set"),
     no_git: bool = typer.Option(False, "--no-git", help="Do not run git init"),
     track_pdf: bool = typer.Option(False, "--track-pdf", help="Track compiled PDFs in git"),
@@ -237,17 +244,22 @@ def main(
         _success(f"Saved template alias '{alias}'")
         return
 
-    if set_default:
+    if default_template_set and set_default and default_template_set != set_default:
+        raise typer.BadParameter("Use only one of --default-template-set or --set-default-template")
+
+    requested_default_template = default_template_set or set_default
+
+    if requested_default_template:
         if project_name or template:
-            raise typer.BadParameter("Do not pass PROJECT_NAME or TEMPLATE with --set-default-template")
+            raise typer.BadParameter("Do not pass PROJECT_NAME or TEMPLATE with --default-template-set")
 
         try:
-            set_default_template(set_default)
+            set_default_template(requested_default_template)
         except KeyError as error:
             _error(str(error))
             raise typer.Exit(code=1)
 
-        _success(f"Default template set to '{set_default}'")
+        _success(f"Default template set to '{requested_default_template}'")
         return
 
     if templates_list:

@@ -12,25 +12,16 @@ Works on macOS, Linux, and Windows (with Python/pipx).
 
 ## 2. Configuration
 
-By default, `acm` is bundled inside the package and resolves to `package://acm`.
-You can run `newtex <project-name> acm` immediately after `pipx install`.
-
-### 2.1 Local environment file
-
-Create `.env.local` in the project root:
-
-```bash
-NEWTEX_DEFAULT_TEMPLATE=acm
-NEWTEX_TEMPLATE_ACM_PATH=/path/to/your/acm-template
-```
+Bundled templates are discovered dynamically from `src/newtex/resources/templates`.
+By default, `acm-conf` and `ntu-report-template` are included and resolve to `package://<template-name>`.
 
 ### 2.2 Global template config (recommended)
 
 Configure templates once and use `newtex` from anywhere:
 
 ```bash
-newtex --template-set acm=/absolute/path/or/url/to/template
-newtex --set-default-template acm
+newtex --template-set acm-conf=/absolute/path/or/url/to/template
+newtex --default-template-set acm-conf
 newtex --templates-list
 ```
 
@@ -47,7 +38,8 @@ This writes to `~/.config/newtex/templates.yml`.
 | `newtex --publish-check` | Validate build/upload prerequisites |
 | `newtex --template-set <alias>=<path-or-url>` | Add or update a global template alias |
 | `newtex --template-set <alias>=<path-or-url> --template-description "..."` | Add alias with description |
-| `newtex --set-default-template <alias>` | Set the global default template alias |
+| `newtex --default-template-set <alias>` | Set the global default template alias |
+| `newtex --set-default-template <alias>` | Backward-compatible alias for `--default-template-set` |
 | `newtex --templates-list` | Show configured global templates |
 | `newtex` | Start interactive project creation |
 | `newtex <project-name> <template>` | Create a project in non-interactive mode |
@@ -61,11 +53,11 @@ This writes to `~/.config/newtex/templates.yml`.
 ```bash
 newtex --help
 newtex
-newtex exlang-paper acm
-newtex exlang-paper acm --no-git
-newtex exlang-paper acm --track-pdf
-newtex exlang-paper acm --no-vscode
-newtex exlang-paper acm --open
+newtex exlang-paper acm-conf
+newtex exlang-paper acm-conf --no-git
+newtex exlang-paper acm-conf --track-pdf
+newtex exlang-paper acm-conf --no-vscode
+newtex exlang-paper acm-conf --open
 ```
 
 <details>
@@ -74,8 +66,8 @@ newtex exlang-paper acm --open
 ```bash
 newtex --tests
 newtex --publish-check
-newtex --template-set acm=/absolute/path/to/template
-newtex --set-default-template acm
+newtex --template-set acm-conf=/absolute/path/to/template
+newtex --default-template-set acm-conf
 newtex --templates-list
 ```
 
@@ -126,6 +118,6 @@ pipx install newtex-cli
 Then configure templates on that machine:
 
 ```bash
-newtex --template-set acm=/absolute/path/or/url/to/template
-newtex --set-default-template acm
+newtex --template-set acm-conf=/absolute/path/or/url/to/template
+newtex --default-template-set acm-conf
 ```

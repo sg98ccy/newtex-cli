@@ -1,6 +1,8 @@
-<h1 align="center">newtex-cli</h1>
+<h1 align="center">NewTex-CLI</h1>
 
-<p align="center">Scaffold local LaTeX projects from reusable templates.</p>
+<p align="center">
+	<img src="cover-image.png" alt="newtex-cli cover image" />
+</p>
 
 ## 1. Installation
 
@@ -19,9 +21,8 @@ Works on macOS, Linux, and Windows (with Python/pipx).
 ## 2. Configuration
 
 Bundled templates are discovered dynamically from `src/newtex/resources/templates`.
-By default, `acm-conf` and `ntu-report-template` are included and resolve to `package://<template-name>`.
 
-### 2.2 Global template config (recommended)
+### 2.1 Global template config (recommended)
 
 Configure templates once and use `newtex` from anywhere:
 
@@ -33,13 +34,7 @@ newtex --templates-list
 
 This writes to `~/.config/newtex/templates.yml`.
 
-## 3. CLI Commands
-
-### 3.0 Terminal UX
-
-- `newtex` interactive mode now uses an adaptive Rich landing design with a retro ASCII-style banner.
-- The layout auto-adjusts to terminal width (wide vs compact rendering).
-- Utility workflows (`--version`, `--tests`, `--publish-check`, template management flags) keep concise output with light visual polish.
+## 3. CLI commands
 
 ### 3.1 Command reference
 
@@ -49,8 +44,6 @@ This writes to `~/.config/newtex/templates.yml`.
 | `newtex --version` | Show current installed version |
 | `newtex --update` | Update to the latest published version |
 | `newtex --upgrade` | Alias of `--update` |
-| `newtex --tests` | Run the full test suite |
-| `newtex --publish-check` | Validate build/upload prerequisites |
 | `newtex --template-set <alias>=<path-or-url>` | Add or update a global template alias |
 | `newtex --template-set <alias>=<path-or-url> --template-description "..."` | Add alias with description |
 | `newtex --default-template-set <alias>` | Set the global default template alias |
@@ -80,19 +73,6 @@ newtex exlang-paper acm-conf --open
 
 Interactive flow now shows a scaffold plan summary before generation and asks for confirmation.
 
-<details>
-<summary><strong>Advanced commands</strong></summary>
-
-```bash
-newtex --tests
-newtex --publish-check
-newtex --template-set acm-conf=/absolute/path/to/template
-newtex --default-template-set acm-conf
-newtex --templates-list
-```
-
-</details>
-
 ## 4. Notes
 
 - Project names must be lowercase kebab-case (example: `exlang-paper`).
@@ -102,37 +82,11 @@ newtex --templates-list
 	- `package://<name>` (copied from bundled package resources)
 	- remote template URL (scaffolded via Copier)
 
-## 5. Maintainer Release (optional)
-
-End users can skip this section.
-
-### 5.1 Build distributions
-
-```bash
-python -m pip install -e ".[publish]"
-newtex --publish-check
-python -m build
-```
-
-### 5.2 Upload to PyPI
-
-You need a PyPI account to publish public packages.
-
-Set token-based auth (recommended):
-
-```bash
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=<your-pypi-api-token>
-```
-
-```bash
-python -m twine upload dist/*
-```
-
-### 5.3 Install on another machine (cross-platform)
+## 5. Install on another machine
 
 ```bash
 pipx install newtex-cli
+# or
 python -m pip install newtex-cli
 ```
 

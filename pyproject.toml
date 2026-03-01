@@ -25,6 +25,7 @@ dependencies = [
 
 [project.scripts]
 newtex = "newtex.cli:app"
+build-local = "newtex.release:main"
 
 [project.urls]
 Homepage = "https://github.com/sg98ccy/newtex-cli"

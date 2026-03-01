@@ -88,6 +88,47 @@ def test_cli_interactive_uses_suggestion(monkeypatch, tmp_path: Path) -> None:
     assert captured["template_path"] == "/template"
 
 
+def test_cli_interactive_cancelled_before_scaffold(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli_module,
+        "load_config",
+        lambda: {
+            "default_template": "acm-conf",
+            "templates": {"acm-conf": {"path": "/template", "description": "desc"}},
+        },
+    )
+    monkeypatch.setattr(cli_module.Path, "exists", lambda self: True)
+
+    class _Prompt:
+        def __init__(self, value):
+            self._value = value
+
+        def ask(self):
+            return self._value
+
+    monkeypatch.setattr(cli_module.questionary, "text", lambda *args, **kwargs: _Prompt("my-project"))
+    monkeypatch.setattr(cli_module.questionary, "select", lambda *args, **kwargs: _Prompt("acm-conf"))
+
+    confirm_answers = iter([False])
+    monkeypatch.setattr(
+        cli_module.questionary,
+        "confirm",
+        lambda *args, **kwargs: _Prompt(next(confirm_answers)),
+    )
+
+    monkeypatch.setattr(
+        cli_module,
+        "scaffold_project",
+        lambda **kwargs: (_ for _ in ()).throw(AssertionError("scaffold_project should not be called")),
+    )
+
+    result = runner.invoke(cli_module.app, [])
+
+    assert result.exit_code == 1
+    assert "Cancelled" in result.output
+
+
 def test_cli_tests_option_runs_and_exits_success(monkeypatch) -> None:
     monkeypatch.setattr(cli_module, "_run_tests", lambda: 0)
     monkeypatch.setattr(cli_module, "load_config", lambda: (_ for _ in ()).throw(AssertionError("load_config should not run")))
@@ -199,3 +240,58 @@ def test_cli_publish_check_failure_code(monkeypatch) -> None:
     result = runner.invoke(cli_module.app, ["--publish-check"])
 
     assert result.exit_code == 1
+
+
+def test_cli_version_flag(monkeypatch) -> None:
+    monkeypatch.setattr(cli_module, "_get_current_version", lambda: "0.1.4")
+
+    result = runner.invoke(cli_module.app, ["--version"])
+
+    assert result.exit_code == 0
+    assert "Current version:" in result.output
+    assert "0.1.4" in result.output
+
+
+def test_cli_update_flag_success(monkeypatch) -> None:
+    monkeypatch.setattr(cli_module, "_run_self_update", lambda: 0)
+    monkeypatch.setattr(cli_module, "_get_current_version", lambda: "0.1.5")
+
+    result = runner.invoke(cli_module.app, ["--update"])
+
+    assert result.exit_code == 0
+    assert "Update completed" in result.output
+    assert "0.1.5" in result.output
+
+
+def test_cli_update_flag_failure(monkeypatch) -> None:
+    monkeypatch.setattr(cli_module, "_run_self_update", lambda: 2)
+
+    result = runner.invoke(cli_module.app, ["--update"])
+
+    assert result.exit_code == 2
+    assert "Update failed" in result.output
+
+
+def test_cli_upgrade_flag_alias_success(monkeypatch) -> None:
+    monkeypatch.setattr(cli_module, "_run_self_update", lambda: 0)
+    monkeypatch.setattr(cli_module, "_get_current_version", lambda: "0.1.6")
+
+    result = runner.invoke(cli_module.app, ["--upgrade"])
+
+    assert result.exit_code == 0
+    assert "Update completed" in result.output
+    assert "0.1.6" in result.output
+
+
+def test_cli_version_flag_rejects_positional_args() -> None:
+    result = runner.invoke(cli_module.app, ["paper", "acm-conf", "--version"])
+
+    assert result.exit_code != 0
+    assert "Do not pass PROJECT_NAME or TEMPLATE with --version" in result.output
+
+
+def test_cli_update_flag_rejects_positional_args() -> None:
+    result = runner.invoke(cli_module.app, ["paper", "acm-conf", "--update"])
+
+    assert result.exit_code != 0
+    assert "Do not pass PROJECT_NAME or TEMPLATE with --update" in result.output

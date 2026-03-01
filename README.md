@@ -8,6 +8,12 @@
 pipx install newtex-cli
 ```
 
+Common `pip` install alternative:
+
+```bash
+python -m pip install newtex-cli
+```
+
 Works on macOS, Linux, and Windows (with Python/pipx).
 
 ## 2. Configuration
@@ -29,11 +35,20 @@ This writes to `~/.config/newtex/templates.yml`.
 
 ## 3. CLI Commands
 
+### 3.0 Terminal UX
+
+- `newtex` interactive mode now uses an adaptive Rich landing design with a retro ASCII-style banner.
+- The layout auto-adjusts to terminal width (wide vs compact rendering).
+- Utility workflows (`--version`, `--tests`, `--publish-check`, template management flags) keep concise output with light visual polish.
+
 ### 3.1 Command reference
 
 | Command | Description |
 | --- | --- |
 | `newtex --help` | Show CLI help |
+| `newtex --version` | Show current installed version |
+| `newtex --update` | Update to the latest published version |
+| `newtex --upgrade` | Alias of `--update` |
 | `newtex --tests` | Run the full test suite |
 | `newtex --publish-check` | Validate build/upload prerequisites |
 | `newtex --template-set <alias>=<path-or-url>` | Add or update a global template alias |
@@ -52,6 +67,9 @@ This writes to `~/.config/newtex/templates.yml`.
 
 ```bash
 newtex --help
+newtex --version
+newtex --update
+newtex --upgrade
 newtex
 newtex exlang-paper acm-conf
 newtex exlang-paper acm-conf --no-git
@@ -59,6 +77,8 @@ newtex exlang-paper acm-conf --track-pdf
 newtex exlang-paper acm-conf --no-vscode
 newtex exlang-paper acm-conf --open
 ```
+
+Interactive flow now shows a scaffold plan summary before generation and asks for confirmation.
 
 <details>
 <summary><strong>Advanced commands</strong></summary>
@@ -113,6 +133,7 @@ python -m twine upload dist/*
 
 ```bash
 pipx install newtex-cli
+python -m pip install newtex-cli
 ```
 
 Then configure templates on that machine:
